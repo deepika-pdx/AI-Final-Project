@@ -192,6 +192,7 @@ if __name__ == '__main__':
                     # Load the background
                     obstacle_width, obstacle_height = load_background()
 
+                    # Display the generation number
                     font = pg.font.Font('freesansbold.ttf', 20)
                     text = font.render("Generation: " + str(generation), True, (255, 255, 255))
                     textRect = text.get_rect()
