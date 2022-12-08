@@ -77,7 +77,7 @@ print(ant.create_grid())
 running = True
 vel = 80
 while running:
-    #pygame.time.delay(5)
+    #lspygame.time.delay(5)
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
