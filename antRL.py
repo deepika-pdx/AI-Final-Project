@@ -3,6 +3,19 @@ import numpy as np
 import pygame
 
 
+def create_grid():
+    grid = np.zeros((10, 12))
+    for i in range(len(grid)):
+        for j in range(len(grid[i])):
+            if j == 0 or j == 11 or i == 0 or i == 9:
+                grid[i][j] = 3
+            if i == 2 and (j == 2 or j == 3 or j == 4 or j == 5 or j == 6 or j == 7):
+                grid[i][j] = -10
+            elif i == 1 and j == 4:
+                grid[i][j] = 10
+    return grid
+
+
 class Ant:
     def __init__(self):
         self.no_of_ants = 1
@@ -53,17 +66,6 @@ class Ant:
                                    block_size, block_size)
                 pygame.draw.rect(self.window, WHITE, rect, 1)
 
-    def create_grid(self):
-        self.grid = np.zeros((10, 12))
-        for i in range(len(self.grid)):
-            for j in range(len(self.grid[i])):
-                if (j == 0 or j == 11 or i == 0 or i == 9):
-                    self.grid[i][j] = 3
-                if i == 2 and (j == 2 or j == 3 or j == 4 or j == 5 or j == 6 or j == 7):
-                    self.grid[i][j] = -10
-                elif i == 1 and j == 4:
-                    self.grid[i][j] = 10
-        return self.grid
 
     def sense_curr(self, grid):
         return grid[self.x][self.y]
@@ -120,7 +122,7 @@ class Ant:
         return state_vector
 
     def select_action(self, curr_state, Q_matrix, epsilon):
-        if random.randint(1, 100) <= (100 * epsilon):  # exploring 
+        if random.randint(1, 100) <= (100 * epsilon):  # exploring
             action = random.randint(0, 5)
             return action
         # exploiting
@@ -205,13 +207,13 @@ class Ant:
             i += 1
 
 
-    def train(self, Q_matrix):
+    def train(self, Q_matrix, grid):
         N = 5000  # number of reps for training
         k = 0  # starting rep
         epsilon = 0.1  # greedy action selection
         reward_list = list()
         while k < N:
-            grid = self.create_grid()  # creates grid
+            # grid = self.create_grid()  # creates grid
             for i, g in enumerate(grid):
                 for j, gr in enumerate(grid[i]):
                     if j == 0 or j == 11 or i == 0 or i == 11:
@@ -266,12 +268,11 @@ class Ant:
         z = 0
 
 
-ant = Ant()
-print(ant.create_grid())
+print(create_grid())
 Q_matrix = {}
-Robot = Ant()
-Robot.train(Q_matrix)  # trains ant
-Robot.test(Q_matrix)  # tests ant
+ant = Ant()
+ant.train(Q_matrix, create_grid())  # trains ant
+ant.test(Q_matrix)  # tests ant
 running = True
 while running:
     for event in pygame.event.get():
@@ -284,4 +285,3 @@ while running:
     ant.draw_grid(ant.window_x, ant.window_y)
     pygame.display.update()
 pygame.quit()
-
