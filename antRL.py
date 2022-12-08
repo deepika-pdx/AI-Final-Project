@@ -120,9 +120,10 @@ class Ant:
         return state_vector
 
     def select_action(self, curr_state, Q_matrix, epsilon):
-        if random.randint(1, 100) <= (100 * epsilon):
+        if random.randint(1, 100) <= (100 * epsilon):  # exploring 
             action = random.randint(0, 5)
             return action
+        # exploiting
         poss_actions = list()  # list of possible action's q values
         eat = Q_matrix[curr_state][0]  # eat bread q value
         poss_actions.append(eat)
@@ -269,15 +270,15 @@ ant = Ant()
 print(ant.create_grid())
 Q_matrix = {}
 Robot = Ant()
-Robot.train(Q_matrix)  # trains Robby
-Robot.test(Q_matrix)  # tests Robby
+Robot.train(Q_matrix)  # trains ant
+Robot.test(Q_matrix)  # tests ant
 running = True
 while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
     for i in range(ant.no_of_ants):
-        ant.display_ant(ant.ant_x[i], ant.ant_y[i], i)  # ERROR after trying to generate ants inside cells
+        ant.display_ant(ant.ant_x, ant.ant_y)  # ERROR after trying to generate ants inside cells
     ant.display_wall()
     ant.display_bread()
     ant.draw_grid(ant.window_x, ant.window_y)
