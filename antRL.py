@@ -12,7 +12,7 @@ def create_grid():
             if i == 2 and (j == 2 or j == 3 or j == 4 or j == 5 or j == 6 or j == 7):
                 grid[i][j] = -10
             elif i == 1 and j == 4:
-                grid[i][j] = 10
+                grid[i][j] = 50
     return grid
 
 
@@ -66,7 +66,7 @@ class Ant:
                                    block_size, block_size)
                 pygame.draw.rect(self.window, WHITE, rect, 1)
 
-
+# Sensor functions
     def sense_curr(self, grid):
         return grid[self.x][self.y]
 
@@ -82,16 +82,13 @@ class Ant:
     def sense_west(self, grid):
         return grid[self.x - 1][self.y]
 
+# Action functions
     def eat_food(self, grid):  # eat the bread
-        if grid[self.x][self.y] == 10:
+        if grid[self.x][self.y] == 50:
             grid[self.x][self.y] = 0
             return True  # if action was successful
         else:
             return False
-
-    def wall(self, grid):
-        if grid[self.x][self.y] == -10:  # if hit the wall
-            return True
 
     def move_north(self, grid):  # move north on the grid
         if self.sense_north(grid) == 3:
@@ -117,7 +114,14 @@ class Ant:
         self.x -= 1
         return True  # if action was successful
 
-    def convert_state(self, grid):  # represents state as a tuple
+    def wall(self, grid):
+        if grid[self.x][self.y] == -10:  # if hit the wall
+            return True
+        else:
+            return False
+
+# represents state as a tuple
+    def convert_state(self, grid):
         state_vector = (self.sense_curr(grid), self.sense_north(grid), self.sense_south(grid), self.sense_east(grid), self.sense_west(grid))
         return state_vector
 
@@ -186,6 +190,12 @@ class Ant:
                 return 0
             else:
                 return -5
+        elif action == 5:  # hit the wall
+            success = self.wall(grid)
+            if success is True:
+                return -10
+            else:
+                return 0
 
     def episode(self, grid, Q_matrix, epsilon):
         M = 200  # number of reps
@@ -285,3 +295,4 @@ while running:
     ant.draw_grid(ant.window_x, ant.window_y)
     pygame.display.update()
 pygame.quit()
+
