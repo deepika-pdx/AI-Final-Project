@@ -29,6 +29,7 @@ class Ant:
         self.window.blit(self.ant, (self.ant_x, self.ant_y))
 
     def display_wall(self):
+        self.window.blit(self.bg, (0, 0))
         self.window.blit(self.wall, (self.wall_x, self.wall_y))
 
     def display_bread(self):
@@ -141,7 +142,8 @@ while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
-    for episode in range(10):
+    #training episode:
+    for episode in range(100):
         row_index, column_index = get_starting_location()
 
         while not is_terminal_state(row_index, column_index):
@@ -156,10 +158,26 @@ while running:
 
             new_q_value = old_q_value + (learning_rate * temporal_difference)
             q_values[old_row_index, old_column_index, action_index] = new_q_value
-#print('Training complete!')
+    #print('Training complete!')
+    #testing episode
+    for episode in range(50):
+        row_index, column_index = get_starting_location()
 
-    ant.display_ant()
+        while not is_terminal_state(row_index, column_index):
+            action_index = get_next_action(row_index, column_index, epsilon)
+
+            old_row_index, old_column_index = row_index, column_index
+            row_index, column_index = get_next_location(row_index, column_index, action_index)
+
+            reward = rewards[row_index, column_index]
+            old_q_value = q_values[old_row_index, old_column_index, action_index]
+            temporal_difference = reward + (discount_factor * np.max(q_values[row_index, column_index])) - old_q_value
+
+            new_q_value = old_q_value + (learning_rate * temporal_difference)
+
+
     ant.display_wall()
+    ant.display_ant()
     ant.display_bread()
     ant.draw_grid(ant.window_x, ant.window_y)
     pygame.display.update()
