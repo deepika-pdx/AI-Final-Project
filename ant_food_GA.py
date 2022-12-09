@@ -2,12 +2,14 @@ import math
 import random
 from math import floor
 import pygame as pg
+from numpy import mean
 from numpy.random import choice
+import matplotlib.pyplot as plt
 
 # import pygame.event
 
 # from ant2 import Ant
-from Ant import Ant
+from ant import Ant
 
 SCREEN_WIDTH = 1100
 SCREEN_HEIGHT = 800
@@ -22,12 +24,12 @@ obstacle_position_y = SCREEN_HEIGHT / 2.5
 obstacle_width = 0
 obstacle_height = 0
 
-ant_icon = pg.image.load("icons8-ant-30.png")
+ant_icon = pg.image.load("ant.png")
 ant_population_count = 50
 ant_list = []
 ant_fitness_list = []
-ant_lifespan = 40
-no_of_generations = 300
+ant_lifespan = 30
+no_of_generations = 200
 new_ant_list = []
 norm_ant_fitness_dict = {}
 
@@ -63,8 +65,10 @@ def evaluate():
     # Determine the fitness of each ant
     for individual in ant_list:
         individual_fitness = calculate_ant_fitness(individual)
-        if individual.reachedFood:
-            individual_fitness = individual_fitness * 50
+        if (not individual.clashedObstacle) and individual.reachedFood:
+            individual_fitness = individual_fitness * 100
+        elif individual.clashedObstacle and individual.reachedFood:
+            individual_fitness = individual_fitness / 50
         elif individual.clashedObstacle:
             individual_fitness = individual_fitness / 100
         calculated_ant_fitness_list.append(individual_fitness)
@@ -134,15 +138,16 @@ def crossover_and_mutation(parent_1, parent_2):
         mutation_index_2 = random.randint(0, len(parent_1.genes) - 1)
         child_ant_2_genes[mutation_index_2] = generate_genes()
 
-    # child_1_x_co_ordinate = random.randrange(ANT_SIZE, SCREEN_WIDTH - ANT_SIZE)
-    # child_1_y_co_ordinate = (random.randrange(SCREEN_HEIGHT - 100, SCREEN_HEIGHT)) - ANT_SIZE
-    # child_2_x_co_ordinate = random.randrange(ANT_SIZE, SCREEN_WIDTH - ANT_SIZE)
-    # child_2_y_co_ordinate = (random.randrange(SCREEN_HEIGHT - 100, SCREEN_HEIGHT)) - ANT_SIZE
-    # generated_child_ant_1 = Ant(child_1_x_co_ordinate, child_1_y_co_ordinate, child_ant_1_genes)
-    # generated_child_ant_2 = Ant(child_2_x_co_ordinate, child_2_y_co_ordinate, child_ant_2_genes)
-
-    generated_child_ant_1 = Ant(parent_1.x_position + 2, parent_2.y_position - 4, child_ant_1_genes)
-    generated_child_ant_2 = Ant(parent_2.x_position + 2, parent_1.y_position - 4, child_ant_2_genes)
+    if parent_1.reachedFood or parent_2.reachedFood:
+        child_1_x_co_ordinate = random.randrange(ANT_SIZE, (SCREEN_WIDTH - 300) - ANT_SIZE)
+        child_1_y_co_ordinate = (random.randrange(SCREEN_HEIGHT - 100, SCREEN_HEIGHT)) - ANT_SIZE
+        child_2_x_co_ordinate = random.randrange(ANT_SIZE, (SCREEN_WIDTH - 300) - ANT_SIZE)
+        child_2_y_co_ordinate = (random.randrange(SCREEN_HEIGHT - 100, SCREEN_HEIGHT)) - ANT_SIZE
+        generated_child_ant_1 = Ant(child_1_x_co_ordinate, child_1_y_co_ordinate, child_ant_1_genes)
+        generated_child_ant_2 = Ant(child_2_x_co_ordinate, child_2_y_co_ordinate, child_ant_2_genes)
+    else:
+        generated_child_ant_1 = Ant(parent_1.x_position + 2, parent_2.y_position - 8, child_ant_1_genes)
+        generated_child_ant_2 = Ant(parent_2.x_position + 4, parent_1.y_position - 4, child_ant_2_genes)
     ant_child_array.append(generated_child_ant_1)
     ant_child_array.append(generated_child_ant_2)
 
@@ -158,7 +163,7 @@ def load_background():
     # Reloading the background
     window.blit(background, (0, 0))
     # Displaying the food
-    food = pg.image.load("icons8-bread-loaf-48.png")
+    food = pg.image.load("bread.png")
     window.blit(food, (food_position_x, food_position_y))
     # Displaying the obstacle
     obstacle = pg.image.load("brick_wall.png")
@@ -175,18 +180,20 @@ if __name__ == '__main__':
     # Setting the background
     window = pg.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
     pg.display.set_caption("Ant Food Hunting")
-    background = pg.image.load("pexels-fwstudio-131634.jpg")
+    background = pg.image.load("greengrass.jpg")
 
     # Generate the ant population
     generate_ant_population(ant_population_count)
-    generation = 0
-    for g in range(no_of_generations):
-        for event in pg.event.get():
-            if event.type == pg.QUIT:
-                should_quit = True
-            else:
-                generation += 1
+    for event in pg.event.get():
+        if event.type == pg.QUIT:
+            should_quit = True
+        else:
+            x_axis = []
+            y_axis = []
+            for generation in range(no_of_generations):
                 print("Generation number: " + str(generation))
+                no_of_ants_reached_food = 0
+                no_of_ants_clashed_obstacle = 0
                 for lifespan_counter in range(ant_lifespan):
                     print("Lifespan count: " + str(lifespan_counter))
                     # Load the background
@@ -197,6 +204,21 @@ if __name__ == '__main__':
                     text = font.render("Generation: " + str(generation), True, (255, 255, 255))
                     textRect = text.get_rect()
                     textRect.center = (80, 40)
+                    window.blit(text, textRect)
+
+                    # Display the number of ants that reached food
+                    font = pg.font.Font('freesansbold.ttf', 15)
+                    text = font.render("Ants reached food: " + str(no_of_ants_reached_food), True, (255, 255, 255))
+                    textRect = text.get_rect()
+                    textRect.center = (80, 60)
+                    window.blit(text, textRect)
+
+                    # Display the number of ants that clashed obstacle
+                    font = pg.font.Font('freesansbold.ttf', 15)
+                    text = font.render("Ants clashed obstacle: " + str(no_of_ants_clashed_obstacle), True,
+                                       (255, 255, 255))
+                    textRect = text.get_rect()
+                    textRect.center = (95, 80)
                     window.blit(text, textRect)
 
                     # Display and start movement of the generated ants
@@ -212,14 +234,14 @@ if __name__ == '__main__':
 
                         if ant_food_distance < 40:
                             eachAnt.reachedFood = True
-                        #  print("Ant reached food")
+                            no_of_ants_reached_food += 1
 
                         if ((ant_x_coordinate > obstacle_position_x) and
                                 (ant_x_coordinate < (obstacle_position_x + obstacle_width)) and
                                 (ant_y_coordinate > obstacle_position_y) and
                                 (ant_y_coordinate < (obstacle_position_y + obstacle_height))):
                             eachAnt.clashedObstacle = True
-                        #   print("Ant clashed obstacle")
+                            no_of_ants_clashed_obstacle += 1
 
                         eachAnt.x_position += eachAnt.genes[lifespan_counter][0]
                         eachAnt.y_position -= eachAnt.genes[lifespan_counter][1]
@@ -230,7 +252,7 @@ if __name__ == '__main__':
                             eachAnt.y_position = (random.randrange(SCREEN_HEIGHT - 100, SCREEN_HEIGHT)) - ANT_SIZE
 
                         pg.display.update()
-                    clock.tick(2)
+                    clock.tick(5)
 
                 # Evaluation -->fitness
                 ant_fitness_list = evaluate()
@@ -241,6 +263,15 @@ if __name__ == '__main__':
                 ant_list = new_ant_list
                 ant_fitness_list = new_ant_fitness_list
                 norm_ant_fitness_dict = normalise_ant_fitness()
+                if generation != 0 and generation % 10 == 0:
+                    x_axis.append(generation)
+                    y_axis.append((mean(ant_fitness_list)) * 1000)
 
-    if should_quit:
-        pg.quit()
+        should_quit = True
+        if should_quit:
+            pg.quit()
+        plt.xlabel("Number of generations")
+        plt.ylabel("Average fitness function")
+        plt.title("Average fitness function vs Number of generations (MutationPct = 0.1")
+        plt.plot(x_axis, y_axis)
+        plt.show()
